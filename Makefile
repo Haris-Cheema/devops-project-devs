@@ -4,7 +4,7 @@ OUT_DIR := out
 SOURCES := $(wildcard $(SRC_DIR)/*.md)
 OUTPUTS := $(patsubst $(SRC_DIR)/%.md,$(OUT_DIR)/%.html,$(SOURCES))
 
-.PHONY: all clean check test ci deps build package
+.PHONY: all clean check lint test coverage ci deps build package
 
 all: build
 
@@ -26,13 +26,22 @@ build: $(OUTPUTS)
 check: ## check markdown source files exist
 	@test -n "$(SOURCES)" || (echo "No .md files found in $(SRC_DIR)"; exit 1)
 
+lint: node_modules ## static analysis: seconds, so it runs first
+	npm run lint
+
 test: build ## run the test suite against what was built
 	@npm test --silent
+
+coverage: build ## the tests again, writing coverage/lcov.info for SonarQube
+	@mkdir -p coverage
+	node --test --experimental-test-coverage \
+		--test-reporter=spec --test-reporter-destination=stdout \
+		--test-reporter=lcov --test-reporter-destination=coverage/lcov.info
 
 package: test ## produce the versioned artifact
 	npm pack
 
 clean: ## remove all generated files
-	rm -rf $(OUT_DIR) *.tgz
+	rm -rf $(OUT_DIR) coverage *.tgz
 
-ci: clean deps check test package ## the build server entry point
+ci: clean deps check lint test package ## everything, in pipeline order
