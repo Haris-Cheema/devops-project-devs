@@ -27,7 +27,7 @@ check: ## check markdown source files exist
 	@test -n "$(SOURCES)" || (echo "No .md files found in $(SRC_DIR)"; exit 1)
 
 lint: node_modules ## static analysis: seconds, so it runs first
-	npm run --silent lint
+	npm run lint
 
 test: build ## run the test suite against what was built
 	@npm test --silent
