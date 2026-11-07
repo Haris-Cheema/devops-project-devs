@@ -23,5 +23,8 @@
   "files": [
     "tools/",
     "README.md"
-  ]
+  ],
+  "devDependencies": {
+    "eslint": "^10.14.0"
+  }
 }
