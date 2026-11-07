@@ -5,24 +5,68 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    - cron: '0 2 * * *' # 02:00 UTC, nightly
-
-permissions:
-  contents: read
+    - cron: '0 2 * * *'
 
 jobs:
-  build:
-    name: build-and-test
+  lint:
+    name: lint
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
+          cache: 'npm'
+      - run: make lint
 
-      - name: Build, test and package
-        run: make ci
+  test:
+    name: test
+    needs: lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: make coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: error
+
+  analyse:
+    name: analyse
+    needs: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+      - uses: SonarSource/sonarqube-scan-action@v8
+        with:
+          args: >
+            -Dsonar.projectKey=Haris-Cheema_devops-project-devs
+            -Dsonar.organization=haris-cheema
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  package:
+    name: package
+    needs: [test, analyse]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: make package
       - uses: actions/upload-artifact@v4
         with:
           name: devops-pipeline
@@ -38,6 +82,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
+          cache: 'npm'
       - run: npm ci
       - run: npm audit --audit-level=high
