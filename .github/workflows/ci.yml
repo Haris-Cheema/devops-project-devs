@@ -49,9 +49,12 @@ jobs:
           name: coverage
           path: coverage
       - uses: SonarSource/sonarqube-scan-action@v8
+        with:
+          args: >
+            -Dsonar.projectKey=Haris-Cheema_devops-project-devs
+            -Dsonar.organization=haris-cheema
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
   package:
     name: package
     needs: [test, analyse]
