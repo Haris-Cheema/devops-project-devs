@@ -5,10 +5,7 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    - cron: '0 2 * * *' # 02:00 UTC, nightly
-
-permissions:
-  contents: read
+    - cron: '0 2 * * *' # Nightly audit
 
 jobs:
   build:
@@ -19,8 +16,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-
+          cache: 'npm'
       - name: Build, test and package
         run: make ci
       - uses: actions/upload-artifact@v4
@@ -38,6 +34,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
+          cache: 'npm'
       - run: npm ci
       - run: npm audit --audit-level=high
